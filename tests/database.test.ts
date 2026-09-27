@@ -1,0 +1,32 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {PGlite} from '@electric-sql/pglite';
+import {makeDemo} from '../lib/domain/demo';
+const A='11111111-1111-4111-8111-111111111111',B='22222222-2222-4222-8222-222222222222';
+test('migration, authenticated persistence, RLS, references, optimistic concurrency and immutable imports',async(t)=>{
+ const db=new PGlite();
+ await db.exec(`create role anon; create role authenticated; create schema auth; create table auth.users(id uuid primary key); create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$; grant usage on schema auth to authenticated; grant execute on function auth.uid() to authenticated; create schema storage; create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]); create table storage.objects(id uuid,name text,bucket_id text); alter table storage.objects enable row level security; create function storage.foldername(text) returns text[] language sql as $$ select string_to_array($1,'/') $$; insert into auth.users values('${A}'),('${B}');`);
+ await db.exec(readFileSync(new URL('../supabase/migrations/20260927024709_growthos_foundation.sql',import.meta.url),'utf8'));
+ const demo=makeDemo(new Date('2026-09-26T19:00:00Z'));
+ async function actor(uid:string){await db.exec(`reset role; set role authenticated; set request.jwt.claim.sub='${uid}';`);}
+ await actor(A);
+ const created=await db.query<{id:string}>('select public.create_workspace($1,$2) id',[demo.profile,demo.rules]);const w=created.rows[0].id;
+ const state={...demo,id:w,mode:'cloud',revision:0};
+ await t.test('full workspace roundtrip persists all evidence',async()=>{const r=await db.query<{revision:number}>('select public.save_workspace($1,$2,$3) revision',[w,0,state]);assert.equal(r.rows[0].revision,1);assert.equal((await db.query('select * from daily_metrics')).rows.length,224);});
+ await t.test('stale revision rejected without changes',async()=>{await assert.rejects(db.query('select public.save_workspace($1,$2,$3)',[w,0,state]),/another session/);});
+ await t.test('cross-workspace selects return no records, including views',async()=>{await actor(B);assert.equal((await db.query('select * from workspaces')).rows.length,0);assert.equal((await db.query('select * from daily_metrics')).rows.length,0);assert.equal((await db.query('select * from ga4_daily_metrics')).rows.length,0);});
+ await t.test('cross-workspace RPC and direct inserts denied',async()=>{await assert.rejects(db.query('select public.save_workspace($1,$2,$3)',[w,1,state]),/access denied/);await assert.rejects(db.query('insert into imports(workspace_id,id,payload) values($1,$2,$3)',[w,demo.imports[0].id,demo.imports[0]]),/row-level security/);});
+ await t.test('client cannot grant itself membership',async()=>{await assert.rejects(db.query('insert into memberships values($1,$2,$3)',[w,B,'owner']),/row-level security/);});
+ await t.test('duplicate natural-key records are rejected by the database',async()=>{await actor(A);const metric={...demo.metrics[0],id:crypto.randomUUID()};await assert.rejects(db.query('insert into daily_metrics(workspace_id,id,payload) values($1,$2,$3)',[w,metric.id,metric]),/unique constraint/);});
+ await t.test('invalid evidence IDs rejected by database',async()=>{const rec={...demo.recommendations[0],id:crypto.randomUUID(),evidenceIds:[crypto.randomUUID()]};await assert.rejects(db.query('insert into recommendations(workspace_id,id,payload) values($1,$2,$3)',[w,rec.id,rec]),/Invalid workspace evidence/);});
+ await t.test('import records are immutable to authenticated clients',async()=>{await assert.rejects(db.query('update imports set payload=$1 where workspace_id=$2',[demo.imports[0],w]),/permission denied/);});
+ await t.test('malformed numeric metrics rejected on direct API writes',async()=>{const metric={...demo.metrics[0],id:crypto.randomUUID(),date:'2026-01-01',spend:-10};await assert.rejects(db.query('insert into daily_metrics(workspace_id,id,payload) values($1,$2,$3)',[w,metric.id,metric]),/outside supported range/);});
+ await t.test('incompatible account definitions rejected by database',async()=>{const report={...demo.imports[0],id:crypto.randomUUID(),fingerprint:'new-file',currency:'EUR'};await assert.rejects(db.query('insert into imports(workspace_id,id,payload) values($1,$2,$3)',[w,report.id,report]),/Incompatible report/);});
+ await t.test('prior draft versions cannot be rewritten directly',async()=>{const draft=structuredClone(demo.drafts[0]);draft.versions[0].content='rewritten history';await assert.rejects(db.query('update drafts set payload=$1 where workspace_id=$2 and id=$3',[draft,w,draft.id]),/immutable/);});
+ await t.test('cross-workspace parent references fail even when both workspaces are owned',async()=>{const other=await db.query<{id:string}>('select public.create_workspace($1,$2) id',[demo.profile,demo.rules]);const metric={...demo.metrics[0],id:crypto.randomUUID()};await assert.rejects(db.query('insert into daily_metrics(workspace_id,id,payload) values($1,$2,$3)',[other.rows[0].id,metric.id,metric]),/Valid source import required/);});
+ await t.test('workspace owner identity is immutable',async()=>{await assert.rejects(db.query('update workspaces set owner_id=$1 where id=$2',[B,w]),/immutable/);});
+ await t.test('viewer can read but not write workspace records',async()=>{await db.query('insert into memberships values($1,$2,$3)',[w,B,'viewer']);await actor(B);assert.equal((await db.query('select * from daily_metrics')).rows.length,224);await assert.rejects(db.query('select public.save_workspace($1,$2,$3)',[w,1,state]),/access denied/);});
+ await t.test('anonymous access fails closed',async()=>{await db.exec('reset role; set role anon');await assert.rejects(db.query('select * from workspaces'),/permission denied/);await assert.rejects(db.query('select public.create_workspace($1,$2)',[demo.profile,demo.rules]),/permission denied/);});
+ await db.close();
+});

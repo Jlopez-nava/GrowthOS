@@ -1,0 +1,25 @@
+import { z } from 'zod';
+export const Source = z.enum(['ga4','gsc','ads']);
+export type Source = z.infer<typeof Source>;
+export const sourceLabels: Record<Source,string> = {ga4:'Google Analytics 4',gsc:'Search Console',ads:'Google Ads'};
+export const ProfileSchema = z.object({name:z.string().trim().min(1).max(100),website:z.string().url(),products:z.string().max(4000),audience:z.string().max(4000),geography:z.string().max(200),conversion:z.string().min(1).max(200),goals:z.string().max(2000),budget:z.number().nonnegative(),voice:z.string().max(2000),competitors:z.string().max(2000),timezone:z.string().refine(v=>{try{new Intl.DateTimeFormat('en',{timeZone:v});return true;}catch{return false;}},'Use a valid IANA timezone'),currency:z.string().regex(/^[A-Z]{3}$/).refine(v=>{try{return Intl.supportedValuesOf('currency').includes(v);}catch{return false;}},'Use a supported currency'),approvedClaims:z.string().max(4000),prohibitedClaims:z.string().max(4000)});
+export type Profile=z.infer<typeof ProfileSchema>;
+export type MetricName='sessions'|'conversions'|'spend'|'clicks'|'impressions';
+export interface Metric {id:string;importId:string;source:Source;account:string;date:string;entity:string;grain:'date_entity';currency:string;timezone:string;definition:string;collectedAt:string;sessions:number|null;conversions:number|null;spend:number|null;clicks:number|null;impressions:number|null;}
+export interface GA4SummaryRow {entity:string;sessions:number|null;keyEvents:number|null;sessionKeyEventRate:number|null;activeUsers:number|null;newUsers:number|null;engagementSeconds:number|null;revenue:number|null;}
+export interface ImportRecord {grain?:'date_entity'|'range_entity';summaryRows?:GA4SummaryRow[];id:string;filename:string;source:Source;account:string;fingerprint:string;createdAt:string;rowCount:number;status:'imported'|'failed';error?:string;start:string;end:string;currency:string;timezone:string;definition:string;}
+export type RecommendationStatus='open'|'reviewed'|'dismissed'|'implemented'|'superseded';
+export interface Recommendation {id:string;key:string;kind:'spend'|'conversion'|'ctr'|'traffic';title:string;summary:string;why:string;action:string;entity:string;source:Source;account:string;metric:MetricName|'conversionRate'|'ctr';current:number;previous:number;start:string;end:string;previousStart:string;previousEnd:string;createdAt:string;evidenceIds:string[];limitations:string[];impact:'High'|'Medium';confidence:'High'|'Medium';effort:'Low'|'Medium';ranking:string;status:RecommendationStatus;draftId?:string;fingerprint:string;}
+export interface DraftVersion {version:number;content:string;createdAt:string;feedback:string;}
+export interface Draft {id:string;recommendationId:string;title:string;type:'Investigation checklist'|'Landing page copy'|'SEO title & description'|'Google Ads copy'|'Article brief'|'LinkedIn post';objective:string;audience:string;sourceIds:string[];versions:DraftVersion[];reviewedVersion:number|null;}
+export interface Decision {id:string;recommendationId:string;action:RecommendationStatus;reason:string;createdAt:string;fingerprint:string;}
+export interface Measurement {id:string;recommendationId:string;implementedAt:string;metric:string;baseline:number;window:7|28;notes:string;outcome:'insufficient evidence'|'improved'|'unchanged'|'worse';}
+export interface BrandVersion {id:string;version:number;profile:Profile;createdAt:string;source:'User approved';}
+export interface Rules {window:7|28;minSessions:number;minImpressions:number;minSpend:number;maxAgeDays:number;declinePercent:number;adsLagDays:number;}
+export interface WorkspaceState {performance?:import('./performance').PerformanceConfig;performanceJourneys?:import('./performance').JourneyImport;id:string;revision:number;profile:Profile;rules:Rules;imports:ImportRecord[];metrics:Metric[];recommendations:Recommendation[];drafts:Draft[];decisions:Decision[];measurements:Measurement[];brandVersions:BrandVersion[];mode:'demo'|'sandbox'|'cloud'|'company';}
+export const defaultRules:Rules={window:7,minSessions:100,minImpressions:1000,minSpend:200,maxAgeDays:7,declinePercent:20,adsLagDays:7};
+export const emptyProfile:Profile={name:'',website:'https://',products:'',audience:'',geography:'United States',conversion:'Demo request',goals:'',budget:0,voice:'Clear, useful, and direct.',competitors:'',timezone:'America/Los_Angeles',currency:'USD',approvedClaims:'',prohibitedClaims:'Unverified statistics, customer claims, guarantees.'};
+export function emptyWorkspace(mode:WorkspaceState['mode']='sandbox'):WorkspaceState{return {id:crypto.randomUUID(),revision:0,profile:{...emptyProfile},rules:{...defaultRules},imports:[],metrics:[],recommendations:[],drafts:[],decisions:[],measurements:[],brandVersions:[],mode};}
+export function id(){return crypto.randomUUID();}
+export function dayOffset(date:string,days:number){const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+days);return d.toISOString().slice(0,10);}
+export function dateInZone(now:Date,timezone:string){return new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(now);}

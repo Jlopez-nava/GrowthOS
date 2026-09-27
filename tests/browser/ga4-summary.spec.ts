@@ -1,0 +1,26 @@
+import {test,expect} from '@playwright/test';
+const csv='# Landing page: Landing page\r\n# Property: example.com\r\n# Start date: 20260829\r\n# End date: 20260925\r\nLanding page,Sessions,Active users,New users,Average engagement time per session,Key events,Total revenue,Session key event rate\r\n/contact,5,4,3,30,8,0,0.8\r\n/,100,90,80,5,15,0,0.1';
+test('native GA4 summary imports, persists, and stays outside daily analysis',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/');await page.getByRole('button',{name:'Import data',exact:true}).click();
+ const dialog=page.getByRole('dialog');
+ await dialog.getByLabel('CSV file').setInputFiles({name:'landing-pages.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+ await expect(dialog.getByLabel('Source account / property ID')).toHaveValue('example.com');
+ await expect(dialog.getByText(/GA4 landing-page summary detected/)).toBeVisible();
+ await dialog.getByRole('button',{name:'Validate & preview'}).click();
+ await expect(dialog.getByRole('heading',{name:'2 valid landing-page summaries'})).toBeVisible();
+ await expect(dialog.getByRole('cell',{name:'80.00%',exact:true})).toBeVisible();
+ await dialog.getByRole('button',{name:'Import summary',exact:true}).click();
+ await expect(dialog.getByRole('button',{name:'Imported successfully'})).toBeVisible();
+ await dialog.getByRole('button',{name:'Close dialog'}).click();
+ await page.getByRole('button',{name:'Performance',exact:true}).click();
+ const report=page.getByRole('region',{name:'GA4 landing-page summaries'});
+ await expect(report).toContainText('2026-08-29 – 2026-09-25');await expect(report.getByRole('cell',{name:'80.00%',exact:true})).toBeVisible();
+ await page.reload();await expect(report.getByRole('cell',{name:'/contact',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Import data',exact:true}).click();
+ await dialog.getByLabel('CSV file').setInputFiles({name:'renamed.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+ await dialog.getByRole('button',{name:'Validate & preview'}).click();await expect(dialog.getByRole('alert')).toContainText('already imported');
+ await dialog.getByRole('button',{name:'Close dialog'}).click();
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ expect(errors).toEqual([]);
+});

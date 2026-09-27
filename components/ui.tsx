@@ -1,0 +1,7 @@
+'use client';
+import * as Dialog from '@radix-ui/react-dialog';
+import { X, Inbox } from 'lucide-react';
+export function Modal({open,onClose,title,description,children,wide=false}:{open:boolean;onClose:()=>void;title:string;description?:string;children:React.ReactNode;wide?:boolean}){return <Dialog.Root open={open} onOpenChange={v=>!v&&onClose()}><Dialog.Portal><Dialog.Overlay className="modal-overlay"/><Dialog.Content className={`modal ${wide?'wide':''}`}><div className="modal-head"><div><Dialog.Title>{title}</Dialog.Title><Dialog.Description>{description??'Review the details and choose your next action.'}</Dialog.Description></div><Dialog.Close className="icon-button" aria-label="Close dialog"><X size={20}/></Dialog.Close></div>{children}</Dialog.Content></Dialog.Portal></Dialog.Root>;}
+export function Empty({title,description,children}:{title:string;description:string;children?:React.ReactNode}){return <div className="empty"><span className="empty-icon"><Inbox size={25}/></span><h3>{title}</h3><p>{description}</p>{children}</div>;}
+export function Badge({children,tone='neutral'}:{children:React.ReactNode;tone?:string}){return <span className={`badge ${tone}`}>{children}</span>;}
+export function download(name:string,text:string,type='text/markdown'){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}

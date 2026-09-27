@@ -1,0 +1,9 @@
+import {mkdir,rm,readdir,readFile,writeFile,copyFile,cp,access} from 'node:fs/promises';
+import path from 'node:path';
+await rm('dist',{recursive:true,force:true});await mkdir('dist/server',{recursive:true});await mkdir('dist/.openai',{recursive:true});
+const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.txt':'text/plain; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.ico':'image/x-icon','.woff2':'font/woff2','.ttf':'font/ttf','.csv':'text/csv; charset=utf-8'};
+const assets={};async function collect(dir){for(const item of await readdir(dir,{withFileTypes:true})){const file=path.join(dir,item.name);if(item.isDirectory())await collect(file);else assets['/'+path.relative('out',file).split(path.sep).join('/')]={type:types[path.extname(file)]??'application/octet-stream',data:(await readFile(file)).toString('base64')};}}
+await collect('out');await writeFile('dist/server/assets.mjs','export default '+JSON.stringify(assets)+';\n');
+for(const name of ['security.mjs','providers.mjs','zapier.mjs','zapier-mcp.mjs','company.mjs','performance.mjs','performance-reports.mjs'])await copyFile('server/'+name,'dist/server/'+name);
+await writeFile('dist/server/index.js',await readFile('server/index.mjs','utf8')+'\nimport assets from "./assets.mjs";\nexport default createWorker(assets);\n');
+try{await access('.openai/hosting.json');await copyFile('.openai/hosting.json','dist/.openai/hosting.json');}catch{console.log('No deployment configured. The frontend and Worker build are ready; see docs/DEPLOYMENT.md before hosting.');}await cp('drizzle','dist/drizzle',{recursive:true});console.log('Packaged frontend and company Worker.');
