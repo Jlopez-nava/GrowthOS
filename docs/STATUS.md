@@ -11,6 +11,7 @@ GrowthOS is an early preview published so others can explore, clone, and contrib
 - Explicitly fictional PromptPilot and Juniper showcases.
 - Rules-based opportunities, inspectable evidence, review workflow, and versioned drafts.
 - Brand-scoped tasks and experiments with owners, dates, implementation logs, guarded before/after comparisons, and saved outcome reviews. See [ACTIONS.md](ACTIONS.md).
+- OpenAI web-search competitor discovery, source-linked suggestions, human confirmation/dismissal, and manual onboarding entries. See [COMPETITORS.md](COMPETITORS.md).
 - Encrypted server-side connection storage and source-specific reporting validation.
 
 ## Incomplete or not yet implemented
@@ -20,7 +21,7 @@ GrowthOS is an early preview published so others can explore, clone, and contrib
 - MintMCP adapter, additional native connectors, and live Search Console connection.
 - OpenAI-backed conversations and generation.
 - Independent scheduled refresh, backfills, and background job operations.
-- Competitor monitoring and causal measurement of recommended changes.
+- Scheduled competitor page-change monitoring and causal measurement of recommended changes.
 - Per-brand/client access control, real-time collaborative editing, and large-account pagination.
 - Turnkey infrastructure provisioning and independent security review.
 

@@ -1,4 +1,5 @@
 import {validateActions} from './action-validation.mjs';
+import {manualCompetitor} from './competitor-core.mjs';
 import {load,save,remove,seal,unseal,storageKey,sameOrigin} from './security.mjs';
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json','cache-control':'no-store','x-content-type-options':'nosniff'}});
 export function fail(message,status=400){return Object.assign(new Error(message),{status});}
@@ -78,6 +79,8 @@ export async function companyApi(request,env){
     if(!current)requireAdmin(actor);
     if(!state.profile||typeof state.profile.name!=='string'||!state.profile.name.trim()||!state.rules||fields.some(f=>!Array.isArray(state[f])))throw fail('The shared workspace is incomplete.');
     validateActions(state.actionPlans,actor.brandId);
+    if(state.profile.competitorEntries!==undefined){if(!Array.isArray(state.profile.competitorEntries)||state.profile.competitorEntries.length>30)throw fail('Add up to 30 onboarding competitors.');const seen=new Set();for(const input of state.profile.competitorEntries){const item=manualCompetitor(input,state.profile.website);if(seen.has(item.domain))throw fail('A competitor website is listed more than once.');seen.add(item.domain);}}
+    if(state.profile.discoverCompetitors!==undefined&&typeof state.profile.discoverCompetitors!=='boolean')throw fail('Choose a valid competitor discovery preference.');
     const next={...state,id:actor.brandId,mode:'company',revision:(current?.revision??-1)+1,updatedAt:new Date().toISOString(),updatedBy:actor.email};
     const saved=await env.BUCKET.put(key,await seal(env,next,context),{onlyIf:object?{etagMatches:object.etag}:{etagDoesNotMatch:'*'},httpMetadata:{contentType:'application/octet-stream'}});
     if(!saved)throw fail('A teammate just saved changes. Reload the company workspace before trying again.',409);
