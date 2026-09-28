@@ -17,4 +17,6 @@ The static Next.js frontend has two distinct persistence paths: a browser-local 
 
 `performance-samples.ts` provides deterministic fictional showcases only for the two reserved example brands when neither a live Zapier connection nor a saved Performance report exists. Sample source metadata is explicit and samples are not written to provider storage.
 
+`actions.ts` defines the action lifecycle and observational before/after calculations. Action plans are an optional field of the encrypted company workspace, validated by `server/action-validation.mjs` and protected by the existing revision/ETag checks. Baseline snapshots are fixed after capture; comparisons require matching provenance and complete, mature periods. The standalone Supabase adapter does not persist action plans; creation is disabled in that mode. See [ACTIONS.md](ACTIONS.md).
+
 See [STATUS.md](STATUS.md) for unfinished integrations and [DEPLOYMENT.md](DEPLOYMENT.md) for the authentication boundary required by this implementation.

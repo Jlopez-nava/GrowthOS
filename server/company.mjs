@@ -1,3 +1,4 @@
+import {validateActions} from './action-validation.mjs';
 import {load,save,remove,seal,unseal,storageKey,sameOrigin} from './security.mjs';
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json','cache-control':'no-store','x-content-type-options':'nosniff'}});
 export function fail(message,status=400){return Object.assign(new Error(message),{status});}
@@ -76,6 +77,7 @@ export async function companyApi(request,env){
     if(data.expectedRevision!==(current?.revision??-1))throw fail('A teammate saved a newer version. Your changes have not been saved. Reload the company workspace before trying again.',409);
     if(!current)requireAdmin(actor);
     if(!state.profile||typeof state.profile.name!=='string'||!state.profile.name.trim()||!state.rules||fields.some(f=>!Array.isArray(state[f])))throw fail('The shared workspace is incomplete.');
+    validateActions(state.actionPlans,actor.brandId);
     const next={...state,id:actor.brandId,mode:'company',revision:(current?.revision??-1)+1,updatedAt:new Date().toISOString(),updatedBy:actor.email};
     const saved=await env.BUCKET.put(key,await seal(env,next,context),{onlyIf:object?{etagMatches:object.etag}:{etagDoesNotMatch:'*'},httpMetadata:{contentType:'application/octet-stream'}});
     if(!saved)throw fail('A teammate just saved changes. Reload the company workspace before trying again.',409);

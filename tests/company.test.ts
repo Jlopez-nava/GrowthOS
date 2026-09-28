@@ -55,3 +55,15 @@ test('performance history is brand scoped, credentials stay private, and disconn
  await save(e,'company:company-a','performance-paid',{at:new Date().toISOString()},'attempt');const cached=await (await performanceApi(request('/api/performance/sync','member@example.com',{kind:'paid',force:true}),e)).json();assert.equal(cached.cached,true);assert.equal(cached.report.rows[0].name,'Owner brand report');
  await zapierApi(request('/api/zapier/disconnect','owner@example.com',{}),e);assert.equal(await load(e,'company:company-a','performance-paid','report'),null);e.db.close();
 });
+
+test('action plans persist for teammates, reject cross-brand payloads, and respect stale revisions',async()=>{
+ const {createAction}=await import('../lib/domain/actions');const e=setup();await add(e,'member@example.com');
+ const plan=createAction({brandId:'company-a',kind:'task',title:'Verify tracking',owner:'Growth team',dueDate:'',hypothesis:'Check the primary conversion action.',direction:'increase',targetPercent:10,window:7,lagDays:7,evidence:{title:'Tracking review',summary:'Validate measurement.',reference:'Manual task',capturedAt:new Date().toISOString()}});
+ const state={...emptyWorkspace('company'),id:'company-a',revision:-1,profile:{...emptyWorkspace().profile,name:'Example team'},actionPlans:[plan]};
+ assert.equal((await companyApi(request('/api/company/workspace','owner@example.com',{workspace:state,expectedRevision:-1}),e)).status,200);
+ const shared=(await (await companyApi(request('/api/company/workspace','member@example.com'),e)).json()).workspace;assert.equal(shared.actionPlans[0].title,'Verify tracking');
+ assert.equal((await companyApi(request('/api/company/workspace','member@example.com',{workspace:{...shared,actionPlans:[{...plan,brandId:'other-brand'}]},expectedRevision:0}),e)).status,400);
+ assert.equal((await companyApi(request('/api/company/workspace','member@example.com',{workspace:{...shared,actionPlans:[{...plan,owner:'Analytics team'}]},expectedRevision:0}),e)).status,200);
+ assert.equal((await companyApi(request('/api/company/workspace','owner@example.com',{workspace:shared,expectedRevision:0}),e)).status,409);
+ assert.equal((await (await companyApi(request('/api/company/workspace'),{...e,COMPANY_ID:'company-b'})).json()).workspace,null);e.db.close();
+});

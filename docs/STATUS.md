@@ -10,6 +10,7 @@ GrowthOS is an early preview published so others can explore, clone, and contrib
 - Performance summary, acquisition trends, campaign scorecards, targets, and brand-specific funnels.
 - Explicitly fictional PromptPilot and Juniper showcases.
 - Rules-based opportunities, inspectable evidence, review workflow, and versioned drafts.
+- Brand-scoped tasks and experiments with owners, dates, implementation logs, guarded before/after comparisons, and saved outcome reviews. See [ACTIONS.md](ACTIONS.md).
 - Encrypted server-side connection storage and source-specific reporting validation.
 
 ## Incomplete or not yet implemented

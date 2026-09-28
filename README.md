@@ -13,6 +13,7 @@ This repository is a sanitized source release. It contains no production account
 - **Paid programs:** campaign spend, budget plans, conversions, cost targets, and explained review prompts such as “Investigate” or “Consider scaling.” These never change ad budgets.
 - **Brand-specific funnels:** service leads, software trials/subscriptions, and ecommerce purchases. GA4 milestone activity is distinguished from genuinely linked journey cohorts.
 - **Brand workspaces:** select a client from the brand dropdown; a single-brand deployment displays the brand without a dropdown.
+- **Actions & experiments:** assign work from campaign findings or CSV opportunities, record changes, compare equal before/after periods, and save an outcome decision. [Workflow guide](docs/ACTIONS.md).
 - **CSV workflow:** validate reports, inspect source evidence, review deterministic opportunities, and create editable drafts.
 - **Fictional showcases:** PromptPilot and Juniper & Co. demonstrate the Performance dashboard with labeled, simulated data. No sample number is a real business claim.
 
