@@ -1,5 +1,5 @@
 'use client';
-import {useState} from 'react';
+import {useEffect,useId,useLayoutEffect,useRef,useState} from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import {Info,X} from 'lucide-react';
 
@@ -56,6 +56,42 @@ const help = {
 } as const;
 export type HelpTopic=keyof typeof help;
 export default function PerformanceHelp({topic,title}:{topic:HelpTopic;title?:string}){
- const [open,setOpen]=useState(false);const content:readonly string[]=help[topic];const heading=title??content[0];
- return <Dialog.Root open={open} onOpenChange={setOpen}><Dialog.Trigger asChild><button type="button" className="performance-info" aria-label={'About '+heading} title={'About '+heading} onClick={e=>{e.preventDefault();e.stopPropagation();setOpen(true);}}><Info size={16} aria-hidden="true"/></button></Dialog.Trigger><Dialog.Portal><Dialog.Overlay className="modal-overlay performance-help-overlay"/><Dialog.Content className="modal performance-help-dialog" onClick={e=>e.stopPropagation()}><div className="modal-head"><div><Dialog.Title>{heading}</Dialog.Title></div><Dialog.Close className="icon-button" aria-label="Close explanation"><X size={19}/></Dialog.Close></div><Dialog.Description className="performance-help-meaning">{content[1]}</Dialog.Description><h3>How to use it</h3><p>{content[2]}</p>{content[3]&&<div className="notice"><strong>Keep in mind</strong><p>{content[3]}</p></div>}</Dialog.Content></Dialog.Portal></Dialog.Root>;
+ const [open,setOpen]=useState(false),[hovered,setHovered]=useState(false);
+ const trigger=useRef<HTMLButtonElement>(null),tooltip=useRef<HTMLDivElement>(null);
+ const timer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const tooltipId=useId();const content:readonly string[]=help[topic];const heading=title??content[0];
+ const clearTimer=()=>{if(timer.current)clearTimeout(timer.current);timer.current=null;};
+ const show=()=>{clearTimer();if(!open)setHovered(true);};
+ const leave=()=>{clearTimer();timer.current=setTimeout(()=>setHovered(false),180);};
+ useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);},[]);
+ useLayoutEffect(()=>{
+  if(!hovered||open||!tooltip.current||!trigger.current)return;
+  const tip=tooltip.current,anchor=trigger.current;
+  // Native popovers escape card clipping and modal transforms without moving focus.
+  tip.showPopover();
+  const rect=anchor.getBoundingClientRect(),size=tip.getBoundingClientRect();
+  const below=window.innerHeight-rect.bottom-12,above=rect.top-12;
+  const placeBelow=below>=size.height||below>=above;
+  tip.style.maxHeight=Math.max(80,placeBelow?below:above)+'px';
+  const height=tip.getBoundingClientRect().height;
+  tip.style.left=Math.max(12,Math.min(rect.left,window.innerWidth-size.width-12))+'px';
+  tip.style.top=Math.max(12,placeBelow?rect.bottom+8:rect.top-height-8)+'px';
+  const dismiss=()=>setHovered(false);
+  const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();dismiss();}};
+  window.addEventListener('keydown',escape,true);
+  window.addEventListener('resize',dismiss);
+  const scroll=(event:Event)=>{if(!tip.contains(event.target as Node))dismiss();};
+  window.addEventListener('scroll',scroll,true);
+  return()=>{if(tip.isConnected)tip.hidePopover();window.removeEventListener('keydown',escape,true);window.removeEventListener('resize',dismiss);window.removeEventListener('scroll',scroll,true);};
+ },[hovered,open]);
+ return <Dialog.Root open={open} onOpenChange={setOpen}>
+  <Dialog.Trigger asChild><button ref={trigger} type="button" className="performance-info" aria-label={'About '+heading} aria-describedby={hovered&&!open?tooltipId:undefined}
+   onPointerEnter={e=>{if(e.pointerType!=='touch')show();}} onPointerLeave={leave}
+   onFocus={e=>{if(e.currentTarget.matches(':focus-visible'))show();}} onBlur={()=>{clearTimer();setHovered(false);}}
+   onClick={e=>{e.preventDefault();e.stopPropagation();clearTimer();setHovered(false);setOpen(true);}}><Info size={16} aria-hidden="true"/></button></Dialog.Trigger>
+  {hovered&&!open&&<div ref={tooltip} id={tooltipId} role="tooltip" popover="manual" className="performance-help-tooltip" onPointerEnter={show} onPointerLeave={leave} onClick={e=>e.stopPropagation()}>
+   <strong className="performance-help-title">{heading}</strong><p>{content[1]}</p><strong>How to use it</strong><p>{content[2]}</p>{content[3]&&<div className="performance-help-caveat"><strong>Keep in mind</strong><p>{content[3]}</p></div>}
+  </div>}
+  <Dialog.Portal><Dialog.Overlay className="modal-overlay performance-help-overlay"/><Dialog.Content className="modal performance-help-dialog" onClick={e=>e.stopPropagation()}><div className="modal-head"><div><Dialog.Title>{heading}</Dialog.Title></div><Dialog.Close className="icon-button" aria-label="Close explanation"><X size={19}/></Dialog.Close></div><Dialog.Description className="performance-help-meaning">{content[1]}</Dialog.Description><h3>How to use it</h3><p>{content[2]}</p>{content[3]&&<div className="notice"><strong>Keep in mind</strong><p>{content[3]}</p></div>}</Dialog.Content></Dialog.Portal>
+ </Dialog.Root>;
 }
