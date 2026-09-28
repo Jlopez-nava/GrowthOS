@@ -6,6 +6,12 @@ GrowthOS is a marketing intelligence workbench for agency teams managing multipl
 
 This repository is a sanitized source release. It contains no production accounts, connection tokens, customer exports, or deployment identity. You must configure your own deployment and connect the brands you are authorized to manage.
 
+## Latest update: a clearer Today page
+
+Today now helps you choose what to do: review up to three priorities with evidence and next steps, follow up on tasks and experiments, and turn saved competitor findings into tests. It uses the same connected reports as Performance, explains freshness and reporting dates, and keeps sample/CSV data labeled separately. It does not start paid competitor scans just because you open the page.
+
+Read the [changelog](CHANGELOG.md), [Today guide](docs/TODAY.md), or [OpenAI / Claude setup guide](docs/AI-PROVIDERS.md). **OpenAI research is implemented; Claude requires a backend adapter.**
+
 ## What you can explore
 
 - **Executive summary:** results, cost per result, recorded website revenue, goals, and comparisons between two 28-day periods.
@@ -55,8 +61,12 @@ The build produces the static frontend in `out/` and a Workers-compatible backen
 | Direct Google OAuth | GA4 reporting implementation; Ads adapter incomplete | Separate direct-report controls; not the four-section live Performance data source |
 | CSV files | Implemented | GA4, Google Ads, Search Console, and linked journey imports |
 | MintMCP | Not implemented | Integration planning guidance only |
+| OpenAI API | Implemented; company admin setup required | Competitor discovery and evidence-backed website comparisons |
+| Claude / Anthropic API | Not implemented | Account preparation and developer integration guide only |
 
 [Connection instructions](docs/CONNECTIONS.md) include per-brand setup, verification, troubleshooting, and current limitations.
+
+For AI research, follow [Connect OpenAI or prepare a Claude integration](docs/AI-PROVIDERS.md). OpenAI is configured under **Competitors → Connect OpenAI**, or through a server runtime secret. Never put an API key in GitHub or a public browser environment variable. One research key serves the company; Google/Zapier reporting connections are configured separately for each brand.
 
 ## Try the fictional Performance dashboards
 

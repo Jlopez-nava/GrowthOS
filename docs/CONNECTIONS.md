@@ -6,6 +6,8 @@ Complete [your own deployment setup](DEPLOYMENT.md), sign in as an admin, and se
 
 Use accounts you are authorized to access. Credentials and reports are stored under the selected brand's encrypted namespace. They are not shared with another deployment or included in this repository. Company teammates in the same deployment can access all its brands.
 
+AI research is a separate connection: see [OpenAI / Claude API setup](AI-PROVIDERS.md). OpenAI is configured in **Competitors**, with one encrypted key for the company and separate research records per brand. The brand-scoped credentials described below are for Google/Zapier reporting. Claude support requires a new adapter.
+
 ## 1. Zapier MCP — current live Performance path
 
 1. Sign in at [Zapier MCP](https://mcp.zapier.com). Create a dedicated server for **Other**, named for the brand, for example `GrowthOS — Example Brand`. Keep separate servers/tokens for different client brands.

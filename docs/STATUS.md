@@ -22,6 +22,7 @@ GrowthOS is an early preview published so others can explore, clone, and contrib
 - A unified live/CSV recommendation engine: Today uses live Performance assessments; CSV findings still use their separate evidence and rules.
 - MintMCP adapter, additional native connectors, and live Search Console connection.
 - OpenAI-backed conversations and generation.
+- Claude / Anthropic provider selection, credential storage and research adapter. See [AI-PROVIDERS.md](AI-PROVIDERS.md) for current OpenAI setup and Claude integration requirements.
 - Independent scheduled refresh, backfills, and background job operations.
 - Automated competitor-ad ingestion, scheduled competitor page-change monitoring and causal measurement of recommended changes.
 - Per-brand/client access control, real-time collaborative editing, and large-account pagination.

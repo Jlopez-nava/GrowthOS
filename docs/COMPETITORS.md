@@ -22,6 +22,8 @@ Automated ad collection and analysis are not implemented. An ongoing feed needs 
 
 ## Connect your own company
 
+For a detailed walkthrough, troubleshooting, and Claude's current support status, see [AI-PROVIDERS.md](AI-PROVIDERS.md). This release implements OpenAI only.
+
 1. Deploy the authenticated company Worker, D1 database and encrypted R2 storage described in your deployment guide. The local static/Next preview has no provider API.
 2. Create an OpenAI project API key with access to the Responses API, web search and `gpt-5.6-terra`. API usage is billed to that project. Set appropriate project spending limits in OpenAI.
 3. Keep the key in a local, Git-ignored env file as `OPENAI_API_KEY`. Never use a `NEXT_PUBLIC_` variable or commit the file.

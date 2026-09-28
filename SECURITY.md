@@ -12,6 +12,7 @@ Application source, migrations, tests with dummy values, blank environment examp
 - `.env*` files (except `.env.example`), `.openai/`, `.dev.vars*`, common private-key files, credential JSON files, local databases, uploads, exports, and logs are ignored.
 - Git ignores do not remove already tracked files. Inspect staged changes and run a secret scanner before every public push.
 - Never commit Zapier connection tokens, OAuth client secrets, refresh/access tokens, encryption keys, service-role keys, real account IDs, report exports, or customer/teammate details.
+- OpenAI and Anthropic API keys are private credentials too. Keep them in server secrets or Git-ignored local files; commit only blank variable names. Follow [AI provider setup](docs/AI-PROVIDERS.md). Dummy keys in tests are deliberately nonworking fixtures, not credentials for this project.
 - Use GitHub's privacy-preserving commit email. Inspect author/committer metadata as well as file contents.
 - If a secret is exposed, revoke or rotate it first; deleting a file does not remove it from Git history or existing clones.
 
