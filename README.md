@@ -14,7 +14,7 @@ This repository is a sanitized source release. It contains no production account
 - **Brand-specific funnels:** service leads, software trials/subscriptions, and ecommerce purchases. GA4 milestone activity is distinguished from genuinely linked journey cohorts.
 - **Brand workspaces:** select a client from the brand dropdown; a single-brand deployment displays the brand without a dropdown.
 - **Actions & experiments:** assign work from campaign findings or CSV opportunities, record changes, compare equal before/after periods, and save an outcome decision. [Workflow guide](docs/ACTIONS.md).
-- **Competitor discovery:** find candidate businesses with OpenAI web search, review the sources, confirm or dismiss matches, and add known competitors during onboarding. [Setup and workflow](docs/COMPETITORS.md).
+- **Competitor intelligence:** discover and confirm businesses, compare your website with up to three competitors, and review source-linked findings and test ideas. Includes manual Google/Meta ad-library lookup links. [Setup and workflow](docs/COMPETITORS.md).
 - **CSV workflow:** validate reports, inspect source evidence, review deterministic opportunities, and create editable drafts.
 - **Fictional showcases:** PromptPilot and Juniper & Co. demonstrate the Performance dashboard with labeled, simulated data. No sample number is a real business claim.
 
@@ -74,7 +74,7 @@ This is a working prototype, **not a finished production platform or a security 
 
 Key boundaries:
 
-- Performance and CSV insights use deterministic calculations and rules. Competitor discovery uses OpenAI web search; AI chat and draft generation are not implemented.
+- Performance and CSV insights use deterministic calculations and rules. Competitor discovery and website comparisons use OpenAI web search; AI chat and draft generation are not implemented.
 - No background schedule runs while the website is closed.
 - Live reports and CSV-based recommendations remain separate pipelines.
 - Direct Google Ads requires developer-token support and further end-to-end validation.

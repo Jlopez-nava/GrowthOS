@@ -2,6 +2,7 @@ import {brandActor,fail} from './company.mjs';
 import {load,save,storageKey,seal,unseal,sameOrigin,hash} from './security.mjs';
 import {emptyResearch,mergeManual,manualCompetitor} from './competitor-core.mjs';
 import {discoverCompetitors,discoveryProfile,DISCOVERY_MODEL} from './competitor-discovery.mjs';
+import {comparisonTargets,compareWebsites} from './competitor-comparison.mjs';
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json','cache-control':'no-store','x-content-type-options':'nosniff'}});
 async function read(env,subject){const key=await storageKey(subject,'competitors','research'),object=await env.BUCKET.get(key);return {key,object,state:object?await unseal(env,await object.text(),'research:'+subject+':competitors'):emptyResearch()};}
 async function update(env,subject,fn){
@@ -39,6 +40,33 @@ export async function competitorsApi(request,env){
   if(url.pathname==='/api/competitors/add'){
    const item=manualCompetitor(body,profile?.website);
    const state=await update(env,actor.subject,s=>{if(body.expectedRevision!==s.revision)throw fail('A teammate changed this list. Reload before adding again.',409);if(s.entries.some(e=>e.domain===item.domain))throw fail('That website is already in this list. Check the Confirmed or Dismissed tab.');return {...s,entries:mergeManual(s.entries,[item],profile?.website,new Date().toISOString())};});return json(result(state));
+  }
+  if(url.pathname==='/api/competitors/compare'){
+   if(!actor.canAdmin)throw fail('Only company admins can start paid website comparisons.',403);
+   if(!configured)throw fail('Connect OpenAI before comparing websites.',503);
+   const initial=(await read(env,actor.subject)).state;
+   const targets=comparisonTargets(profile,initial.entries,body.ids),contextHash=await hash(JSON.stringify(targets)),at=new Date().toISOString(),id=crypto.randomUUID();
+   await update(env,actor.subject,s=>{
+    comparisonTargets(profile,s.entries,body.ids);
+    const c=s.comparison??{report:null,attempt:null,daily:{date:'',count:0}};
+    if(c.attempt?.status==='running'&&Date.now()-Date.parse(c.attempt.at)<180000)throw fail('A comparison is already running. Reload in a moment.',409);
+    if(c.attempt&&Date.now()-Date.parse(c.attempt.at)<60000)throw fail('Wait a minute before starting another comparison.',429);
+    const day=at.slice(0,10),count=c.daily.date===day?c.daily.count:0;if(count>=3)throw fail('This brand has used its 3 daily comparisons. Try again tomorrow (UTC).',429);
+    return {...s,comparison:{...c,daily:{date:day,count:count+1},attempt:{id,at,status:'running',error:null,contextHash}}};
+   });
+   try{
+    const report=await compareWebsites(env,targets);
+    const currentProfile=(await load(env,actor.subject,'workspace','company'))?.profile;
+    const saved=await update(env,actor.subject,async s=>{
+     if(s.comparison?.attempt?.id!==id)throw fail('A newer comparison has replaced this request.',409);
+     if(await hash(JSON.stringify(comparisonTargets(currentProfile,s.entries,body.ids)))!==contextHash)throw fail('The brand or selected competitors changed during comparison. Run it again with the updated selection.',409);
+     return {...s,comparison:{...s.comparison,attempt:{...s.comparison.attempt,status:'complete'},report:{...report,at,completedAt:new Date().toISOString(),targets}}};
+    });return json(result(saved));
+   }catch(error){
+    const message=String(error.message??'Comparison unavailable').replaceAll(env.OPENAI_API_KEY,'[redacted]');
+    const saved=await update(env,actor.subject,s=>s.comparison?.attempt?.id===id?{...s,comparison:{...s.comparison,attempt:{...s.comparison.attempt,status:'failed',error:message}}}:s);
+    return json({...result(saved),error:message},502);
+   }
   }
   if(url.pathname!=='/api/competitors/scan')return json({error:'Not found'},404);
   if(!actor.canAdmin)throw fail('Only company admins can start paid discovery scans. You can still add and review competitors.',403);

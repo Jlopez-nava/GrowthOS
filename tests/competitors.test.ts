@@ -62,3 +62,26 @@ test('only admins can save discovery credentials; key storage is encrypted and s
   globalThis.fetch=async()=>new Response('{}',{status:401});assert.equal((await competitorsApi(req('configure',{token:'sk-invalid-test-abcdefghijklmnopqrst'}),env)).status,400);assert.equal((await load(env,'company:company-a','openai-competitors')).token,key);
  }finally{globalThis.fetch=original;}
 });
+
+test('comparison API enforces admin access, confirmed selections, isolation, cooldown, failure retention and changed context',async()=>{
+ const env=setup();await save(env,'company:company-a','workspace',{profile:{...profile,competitorEntries:[{name:'Beta',website:'https://beta.com'}]}},'company');
+ const initial=await (await competitorsApi(req('sync',{}),env)).json(),id=initial.research.entries[0].id;
+ assert.equal((await competitorsApi(req('compare',{ids:[id]},'member@example.com'),env)).status,403);
+ assert.equal((await competitorsApi(req('compare',{ids:[]}),env)).status,400);
+ assert.equal((await competitorsApi(req('compare?brand=brand_11111111-1111-1111-1111-111111111111',{ids:[id]}),env)).status,400);
+ const provider=(init:any)=>{const input=JSON.parse(JSON.parse(init.body).input);return new Response(JSON.stringify({status:'completed',output:[{type:'web_search_call',status:'completed',action:{sources:[{url:'https://acme.com'},{url:'https://beta.com'}]}},{type:'message',content:[{type:'output_text',text:JSON.stringify(input.website?{findings:[{area:'Conversion',observation:'Contact CTA',evidenceUrls:[input.website]}],limitations:'Coverage limited'}:{opportunities:[],limitations:'Coverage limited'})}]}]}));};
+ const original=globalThis.fetch;let calls=0;
+ globalThis.fetch=async(_url:any,init:any)=>{calls++;return provider(init);};
+ try{
+  const result=await (await competitorsApi(req('compare',{ids:[id]}),env)).json();assert.equal(result.research.comparison.attempt.status,'complete');assert.equal(result.research.comparison.report.sites.length,2);assert.equal(calls,3);
+  assert.equal((await competitorsApi(req('compare',{ids:[id]}),env)).status,429);assert.equal(calls,3);
+  const other=await (await competitorsApi(req('status?brand=brand_11111111-1111-1111-1111-111111111111'),env)).json();assert.equal(other.research.comparison,undefined);
+  let state=await load(env,'company:company-a','competitors','research');state.comparison.attempt.at='2020-01-01T00:00:00Z';await save(env,'company:company-a','competitors',state,'research');
+  globalThis.fetch=async()=>new Response('sensitive upstream error',{status:500});const failed=await (await competitorsApi(req('compare',{ids:[id]}),env)).json();assert.equal(failed.research.comparison.attempt.status,'failed');assert.deepEqual(failed.research.comparison.report,result.research.comparison.report);assert(!failed.error.includes('sensitive'));
+  state=await load(env,'company:company-a','competitors','research');state.comparison.attempt.at='2020-01-01T00:00:00Z';await save(env,'company:company-a','competitors',state,'research');
+  globalThis.fetch=async(_url:any,init:any)=>{await save(env,'company:company-a','workspace',{profile:{...profile,products:'Changed services'}},'company');return provider(init);};
+  const changed=await (await competitorsApi(req('compare',{ids:[id]}),env)).json();assert.equal(changed.research.comparison.attempt.status,'failed');assert.match(changed.error,/changed during/);assert.deepEqual(changed.research.comparison.report,result.research.comparison.report);
+  state=await load(env,'company:company-a','competitors','research');state.comparison.attempt.at='2020-01-01T00:00:00Z';await save(env,'company:company-a','competitors',state,'research');assert.equal((await competitorsApi(req('compare',{ids:[id]}),env)).status,429);
+  assert(![...env.map.values()].map(v=>v.value).join('').includes('Contact CTA'));
+ }finally{globalThis.fetch=original;}
+});

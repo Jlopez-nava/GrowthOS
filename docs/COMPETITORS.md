@@ -1,6 +1,24 @@
-# Competitor discovery
+# Competitor discovery and website comparison
 
 GrowthOS discovers possible competitors using OpenAI web search, then asks a person to confirm the relationship. Discovery is separate from ongoing page-change monitoring, which is not implemented.
+
+## Compare websites
+
+After confirming competitors, use **Competitors → Compare my brand**, select one to three businesses, and click **Compare websites**. The existing company OpenAI connection is reused. Comparisons run only when an admin requests them, never automatically on page open.
+
+The report researches the brand and selected competitors across positioning, offers, trust, conversion paths and content. It returns source-linked findings and up to five prioritized test hypotheses, each with a concrete change and measurement plan. A recommendation needs exact provider-returned evidence from both the brand and a selected competitor, also used in the website findings. Unknown details are labeled “Not verified”; this does not mean the feature is absent. If the brand or all competitors have no usable evidence, the request fails and preserves the last good report.
+
+Reports are encrypted and isolated by company/brand. They are visible to company teammates; only admins may initiate paid research. A report records its date, websites, brand context, limitations, model and usage. Changing the brand context or dismissing a selected competitor during a request prevents saving an outdated result. Later changes flag the saved report as historical. This is a snapshot, not continuous monitoring or a causal claim that a competitor's tactics generate business.
+
+Each brand can attempt three comparisons per UTC day, at least one minute apart, independently of discovery limits. Each request has a 120-second timeout, at most eight web tool calls and 14,000 output tokens across up to five model requests. Each website is researched separately (up to two web tool calls and 2,500 output tokens), then a final request synthesizes only validated findings (up to 4,000 output tokens). Failed requests can incur API costs and count toward the cap. Search results can be cached or incomplete. This is a text-based review, not browser testing of visuals, mobile layouts, forms, accessibility, or page speed.
+
+Only public brand context and selected competitor names, IDs and website addresses are sent to OpenAI; report metrics, budgets, private notes and customer records are excluded. The response uses `store:false`; provider data policies still apply. Requests go to the fixed OpenAI API endpoint. The Worker does not directly fetch arbitrary competitor URLs.
+
+## Public ad libraries
+
+**Explore their ads** links each confirmed competitor to [Google's Ads Transparency Center](https://adstransparency.google.com/) and [Meta's Ad Library](https://www.facebook.com/ads/library/). Check advertiser identity and country/date filters yourself. These are manual lookup links, not scanned ads, proof of active campaigns or a complete advertising history.
+
+Automated ad collection and analysis are not implemented. An ongoing feed needs an appropriately licensed data provider or supported API, its own credentials, and clear coverage limits. The brand's Google Ads OAuth/Zapier connection only accesses authorized accounts; it does not grant access to competitors' private account data. Public ad creatives cannot establish competitor leads, sales, CPA or ROAS. Website comparisons do not incorporate ad-library results.
 
 ## Connect your own company
 
