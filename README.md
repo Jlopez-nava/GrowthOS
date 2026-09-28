@@ -13,6 +13,7 @@ This repository is a sanitized source release. It contains no production account
 - **Paid programs:** campaign spend, budget plans, conversions, cost targets, and explained review prompts such as “Investigate” or “Consider scaling.” These never change ad budgets.
 - **Brand-specific funnels:** service leads, software trials/subscriptions, and ecommerce purchases. GA4 milestone activity is distinguished from genuinely linked journey cohorts.
 - **Brand workspaces:** select a client from the brand dropdown; a single-brand deployment displays the brand without a dropdown.
+- **Today daily brief:** up to three report-backed priorities, due work and experiment follow-ups, saved competitor test ideas, and clear sources and reporting periods. [Daily brief guide](docs/TODAY.md).
 - **Actions & experiments:** assign work from campaign findings or CSV opportunities, record changes, compare equal before/after periods, and save an outcome decision. [Workflow guide](docs/ACTIONS.md).
 - **Competitor intelligence:** discover and confirm businesses, compare your website with up to three competitors, and review source-linked findings and test ideas. Includes manual Google/Meta ad-library lookup links. [Setup and workflow](docs/COMPETITORS.md).
 - **CSV workflow:** validate reports, inspect source evidence, review deterministic opportunities, and create editable drafts.

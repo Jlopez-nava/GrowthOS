@@ -9,6 +9,7 @@ GrowthOS is an early preview published so others can explore, clone, and contrib
 - Zapier-powered GA4 and Google Ads reporting with on-open/manual refresh.
 - Performance summary, acquisition trends, campaign scorecards, targets, and brand-specific funnels.
 - Explicitly fictional PromptPilot and Juniper showcases.
+- Today daily brief with live Performance priorities, source coverage, actionable follow-ups, and saved competitor ideas. See [TODAY.md](TODAY.md).
 - Rules-based opportunities, inspectable evidence, review workflow, and versioned drafts.
 - Brand-scoped tasks and experiments with owners, dates, implementation logs, guarded before/after comparisons, and saved outcome reviews. See [ACTIONS.md](ACTIONS.md).
 - OpenAI web-search competitor discovery, source-linked suggestions, human confirmation/dismissal, and manual onboarding entries. See [COMPETITORS.md](COMPETITORS.md).
@@ -18,7 +19,7 @@ GrowthOS is an early preview published so others can explore, clone, and contrib
 ## Incomplete or not yet implemented
 
 - Direct Google Ads developer-token support and full end-to-end OAuth validation.
-- Feeding live reports into the existing CSV recommendation engine.
+- A unified live/CSV recommendation engine: Today uses live Performance assessments; CSV findings still use their separate evidence and rules.
 - MintMCP adapter, additional native connectors, and live Search Console connection.
 - OpenAI-backed conversations and generation.
 - Independent scheduled refresh, backfills, and background job operations.

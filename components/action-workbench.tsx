@@ -8,8 +8,8 @@ import {actionDatasets,sourceKey,datasetMetrics,metricLabels,statusLabels,create
 import {Modal,Badge,download} from './ui';
 import PerformanceHelp from './performance-help';
 
-export default function ActionWorkbench({state,reports,sample,onSave,seed,onSeedHandled}:{state:WorkspaceState;reports:Partial<Record<PerformanceKind,PerformanceReport|null>>;sample:boolean;onSave:(state:WorkspaceState)=>Promise<void>;seed:ActionSeed|null;onSeedHandled:()=>void}){
- const [creating,setCreating]=useState(false),[selected,setSelected]=useState<string|null>(null),[filter,setFilter]=useState('active'),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
+export default function ActionWorkbench({initialActionId,state,reports,sample,onSave,seed,onSeedHandled}:{initialActionId?:string;state:WorkspaceState;reports:Partial<Record<PerformanceKind,PerformanceReport|null>>;sample:boolean;onSave:(state:WorkspaceState)=>Promise<void>;seed:ActionSeed|null;onSeedHandled:()=>void}){
+ const [creating,setCreating]=useState(false),[selected,setSelected]=useState<string|null>(initialActionId??null),[filter,setFilter]=useState('active'),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const datasets=useMemo(()=>actionDatasets(state,reports,sample),[state,reports,sample]);
  const plans=state.actionPlans??[],active=plans.find(p=>p.id===selected);
  useEffect(()=>{if(seed){setCreating(true);setError('');}},[seed]);
@@ -28,7 +28,7 @@ export default function ActionWorkbench({state,reports,sample,onSave,seed,onSeed
  </section>;
 }
 function resultLabel(plan:ActionPlan){return plan.result?.outcome==='target_met'?'Improvement target met':plan.result?.outcome==='improved'?'Improved, below target':plan.result?.outcome==='worse'?'Moved against the goal':'No observed change';}
-function ActionForm({state,seed,datasets,busy,onCreate}:{state:WorkspaceState;seed:ActionSeed|null;datasets:ActionDataset[];busy:boolean;onCreate:(p:ActionPlan)=>Promise<void>}){
+function ActionForm({state,seed,datasets,busy,onCreate}:{initialActionId?:string;state:WorkspaceState;seed:ActionSeed|null;datasets:ActionDataset[];busy:boolean;onCreate:(p:ActionPlan)=>Promise<void>}){
  const initial=datasets.find(d=>seed?.source&&sourceKey(d.source)===sourceKey(seed.source));
  const [kind,setKind]=useState<'task'|'experiment'>(initial?'experiment':'task'),[title,setTitle]=useState(seed?.title??''),[owner,setOwner]=useState(''),[due,setDue]=useState(''),[hypothesis,setHypothesis]=useState(''),[dataKey,setDataKey]=useState(initial?sourceKey(initial.source):''),[metric,setMetric]=useState<ActionMetric>(seed?.metric??'sessions'),[direction,setDirection]=useState<'increase'|'decrease'>(seed?.metric==='cpa'||seed?.metric==='spend'?'decrease':'increase'),[target,setTarget]=useState(10),[window,setWindow]=useState<7|14|28>(7),[error,setError]=useState('');
  const dataset=datasets.find(d=>sourceKey(d.source)===dataKey),metrics=dataset?datasetMetrics(dataset):[],chosen=metrics.includes(metric)?metric:metrics[0];
