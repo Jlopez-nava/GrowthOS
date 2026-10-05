@@ -12,6 +12,36 @@ Today now helps you choose what to do: review up to three priorities with eviden
 
 Read the [changelog](CHANGELOG.md), [Today guide](docs/TODAY.md), or [OpenAI / Claude setup guide](docs/AI-PROVIDERS.md). **OpenAI research is implemented; Claude requires a backend adapter.**
 
+## Screenshots
+
+Real screenshots of the GrowthOS interface, captured October 4, 2026 with the fictional **PromptPilot** showcase. All metrics shown are simulated; no private client reports or API credentials are included. This remains a work-in-progress preview.
+
+### Campaign insights
+
+Review the reason behind a campaign assessment, inspect supporting metrics, and turn a finding into an action.
+
+![GrowthOS campaign detail showing a sample cost-per-result investigation and Create action button](docs/screenshots/campaign-detail-promptpilot.jpg)
+
+<details>
+<summary><strong>Today — priorities, next steps, and follow-through</strong></summary>
+
+The daily brief explains what needs attention, why it matters, and what to do next. Sample findings are labeled, and saved work and competitor ideas have their own sections.
+
+![GrowthOS Today daily brief with three fictional PromptPilot priorities, reporting dates, and follow-up sections](docs/screenshots/today-promptpilot.jpg)
+
+</details>
+
+<details>
+<summary><strong>Performance — results, acquisition, paid programs, and funnels</strong></summary>
+
+The full dashboard brings together period comparisons, goals, channel trends, campaign assessments, and a linked customer journey funnel. Click the image to inspect it at full resolution.
+
+![GrowthOS full Performance dashboard with fictional PromptPilot metrics, acquisition trends, paid campaigns, and a software funnel](docs/screenshots/performance-promptpilot.jpg)
+
+</details>
+
+[Browse all screenshot files](docs/screenshots)
+
 ## What you can explore
 
 - **Executive summary:** results, cost per result, recorded website revenue, goals, and comparisons between two 28-day periods.
